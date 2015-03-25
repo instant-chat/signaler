@@ -5,7 +5,6 @@ const {
   cached,
   clean,
   concat,
-  gutil,
   jshint,
   pipe,
   print,
@@ -14,11 +13,7 @@ const {
   sourcemaps,
   tasks,
   traceur
-} = require('gulp-load-plugins')({
-  rename: {
-    'gulp-util': 'gutil'
-  }
-});
+} = require('gulp-load-plugins')();
 
 const args = minimist(process.argv.slice(2));
 
