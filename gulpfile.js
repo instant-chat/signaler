@@ -27,6 +27,7 @@ gulp.task('build', sequence('clean', 'runtime'));
 gulp.task('dev', ['runtime'], () => gulp.watch(paths.scripts, ['runtime']));
 
 gulp.task('run', () => run(`node ${paths.dist}/index.js ${args.args || ''}`).exec());
+gulp.task('test', () => run(`node ${paths.dist}/tests/index.js ${args.args || ''}`).exec());
 
 gulp.task('transpile', //['jshint'],
   () => pipe([
