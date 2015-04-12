@@ -7,25 +7,27 @@
   "author": "Blake La Pierre",
   "license": "MIT",
   "devDependencies": {
+    "browserify": "^9.0.8",
     "gulp": "^3.8.11",
-    "gulp-babel": "^4.0.0",
+    "gulp-babel": "^5.1.0",
     "gulp-cached": "^1.0.4",
     "gulp-clean": "^0.3.1",
     "gulp-concat": "^2.5.2",
-    "gulp-jshint": "^1.9.2",
-    "gulp-load-plugins": "^0.8.1",
+    "gulp-jshint": "^1.10.0",
+    "gulp-load-plugins": "^0.10.0",
     "gulp-pipe": "^1.0.3",
     "gulp-print": "^1.1.0",
-    "gulp-run": "^1.6.6",
+    "gulp-run": "^1.6.7",
     "gulp-sequence": "^0.3.2",
-    "gulp-sourcemaps": "^1.5.0",
+    "gulp-sourcemaps": "^1.5.1",
     "gulp-tasks": "0.0.2",
     "gulp-traceur": "^0.17.0",
+    "gulp-uglify": "^1.2.0",
     "gulp-util": "^3.0.4",
-    "traceur": "0.0.86",
-    "traceur-runtime": "0.0.59"
-  },
-  "dependencies": {
-    "minimist": "^1.1.0"
+    "jshint-stylish": "^1.0.1",
+    "minimist": "^1.1.1",
+    "traceur": "0.0.88",
+    "traceur-runtime": "0.0.59",
+    "vinyl-source-stream": "^1.1.0"
   }
 }
