@@ -1,4 +1,4 @@
-FROM mhart/alpine-iojs
+FROM mhart/alpine-iojs-base
 
 ADD ./app /app
 
