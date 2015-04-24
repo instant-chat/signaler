@@ -1,4 +1,4 @@
-module.exports = (app, sockets, identities, stats) => {
+module.exports = (log, sockets, identities) => {
   return {
     'peer offer': buildForwardFn('offer'),
     'peer answer': buildForwardFn('answer'),
@@ -6,13 +6,15 @@ module.exports = (app, sockets, identities, stats) => {
   };
 
   function buildForwardFn(fnName) {
-    const messageName = 'peer ' + fnName;
+    const messageName = `peer ${fnName}`;
 
     return function* (next, data) {
       const {socket} = this;
 
       const {to} = data,
             identity = identities[to];
+
+      log(messageName, 'to', to);
 
       if (identity) {
         const {socket: remoteSocket} = sockets[identity];
@@ -27,7 +29,7 @@ module.exports = (app, sockets, identities, stats) => {
         }
       }
       else {
-        // check remote signalers
+        // need to check remote signalers
         socket.emit('error ' + messageName, {error: `Could not find ${to}`});
       }
     };

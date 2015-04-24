@@ -1,0 +1,7 @@
+#!/bin/bash
+
+tmux new-session -d 'gulpur dev'
+
+tmux split-window -v 'node .dist/index.js'
+
+tmux attach

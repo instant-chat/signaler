@@ -1,9 +1,9 @@
 import route from 'koa-route';
 
-module.exports = (app, signal) => {
+module.exports = (app, signalStats) => {
   app.use(route.get('/stats', getStats));
 
   function* getStats() {
-    this.body = JSON.stringify(signal);
+    this.body = JSON.stringify(signalStats);
   }
 };
