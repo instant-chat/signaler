@@ -1,3 +1,5 @@
+import child_process from 'child_process';
+
 const browserify = require('browserify'),
       gulp = require('gulp'),
       minimist = require('minimist'),
@@ -31,10 +33,11 @@ gulp.task('default', ['build']);
 gulp.task('build', sequence('clean', 'runtime'));
 gulp.task('package', ['uglify'], () => console.log(`App written to ${paths.package}/app.js !`));
 
-gulp.task('dev', ['runtime'], () => gulp.watch(paths.scripts, ['runtime']));
-
 gulp.task('run', () => run(`node ${paths.dist}/index.js ${args.args || ''}`).exec());
 gulp.task('test', () => run(`node ${paths.dist}/tests/index.js ${args.args || ''}`).exec());
+
+gulp.task('watch', ['runtime'], () => gulp.watch(paths.script, ['runtime']));
+gulp.task('dev', ['start_dev'], () => gulp.watch(paths.scripts, ['start_dev']));
 
 gulp.task('transpile', ['jshint'],
   () => pipe([
@@ -57,6 +60,22 @@ gulp.task('runtime', ['transpile'],
     ,gulp.dest(paths.dist)
   ])
   .on('error', function(e) { console.log(e); }));
+
+let devChild;
+gulp.task('start_dev', ['runtime', 'terminate'],
+  done => {
+    devChild = child_process.fork(`./${paths.dist}/index.js`);
+    devChild.on('exit', (code, signal) => {
+      devChild = undefined;
+      done();
+    });
+  });
+
+gulp.task('terminate',
+  () => {
+    if (devChild) devChild.kill();
+  });
+
 
 gulp.task('uglify', ['bundle'],
   () => pipe([

@@ -44,11 +44,18 @@ $ node .dist/tests/index.js
 ````
 
 ###Developing
+This command will watch your source files for changes and run them through `jshint` and the transpiler when they change.
+
+````
+$ gulpur watch
+````
+
+-----------
+This command will do what `watch` does, but will also run your program after transpiling and will restart it after each transpile.
+
 ````
 $ gulpur dev
 ````
-
-This command will watch your source files for changes and run them through `jshint` and the transpiler when they change.
 
 
 ###Containerizing
