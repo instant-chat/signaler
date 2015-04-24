@@ -1,4 +1,5 @@
 import child_process from 'child_process';
+import events from 'events';
 
 const browserify = require('browserify'),
       gulp = require('gulp'),
@@ -61,21 +62,40 @@ gulp.task('runtime', ['transpile'],
   ])
   .on('error', function(e) { console.log(e); }));
 
-let devChild;
+let devChild = {process: undefined};
 gulp.task('start_dev', ['runtime', 'terminate'],
-  done => {
-    devChild = child_process.fork(`./${paths.dist}/index.js`);
-    devChild.on('exit', (code, signal) => {
-      devChild = undefined;
-      done();
+  () => {
+    const process = devChild.process = child_process.fork(`./${paths.dist}/index.js`);
+
+    devChild.doneFn = () => {
+      const {emitter} = devChild;
+      if (emitter) emitter.emit('end');
+    };
+
+    process.on('exit', (code, signal) => {
+      devChild.process = undefined;
+      devChild.terminateFn();
     });
+
+    devChild.emitter = new events.EventEmitter();
+
+    return devChild.emitter;
   });
 
 gulp.task('terminate',
-  () => {
-    if (devChild) devChild.kill();
-  });
+  done => {
+    const {process, doneFn} = devChild;
 
+    if (process) {
+      devChild.terminateFn = () => {
+        console.log('terminated');
+        done();
+      };
+      doneFn();
+      process.kill();
+    }
+    else done();
+  });
 
 gulp.task('uglify', ['bundle'],
   () => pipe([
