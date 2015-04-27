@@ -3,9 +3,7 @@ import _ from 'lodash';
 module.exports = (log, sockets, identities, signalEvents) => {
   const rooms = {};
 
-  signalEvents.on({
-    'disconnect': disconnect
-  });
+  signalEvents.on({disconnect});
 
   return {
     'room join': join,
@@ -42,6 +40,7 @@ module.exports = (log, sockets, identities, signalEvents) => {
 
         socket.emit('room', {name, participants});
 
+        log('room', {name, participants});
         log(identity, 'is in rooms', inRooms);
         log('notifying', toNotify);
         _.each(toNotify, receiverIdentity => {
@@ -76,8 +75,6 @@ module.exports = (log, sockets, identities, signalEvents) => {
 
   function disconnect(socket) {
     const {inRooms, identity} = socket;
-
-    log('disconnecting', identity, inRooms);
 
     if (inRooms) {
       _.each(_.keys(inRooms.rooms), roomName => leaveRoom(socket, roomName));

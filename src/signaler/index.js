@@ -14,7 +14,6 @@ module.exports = app => {
 
   const signal = app.io.of('/signal');
 
-  signal.use(handleError);
   signal.use(handleSocket);
 
   _.each(routes(log, sockets, identities, stats), (handler, name) => app.io.route(name, handler));
@@ -22,15 +21,6 @@ module.exports = app => {
   app.io.route('register', register);
 
   return {stats, events: {on, off}, sockets, identities};
-
-  function* handleError(next) {
-    try {
-      yield next;
-    }
-    catch (e) {
-      log(e.stack);
-    }
-  }
 
   function* handleSocket(next) {
     const {socket} = this;
@@ -66,19 +56,25 @@ module.exports = app => {
   }
 
   function* register(next, identity) {
-    const {socket} = this;
+    // Need to figure out how to generalize this function so that it can be applied to all routes
+    try {
+      const {socket} = this;
 
-    // We should verify that this socket actually owns this identity:
-    // Require a signed message containing the identity
+      // We should verify that this socket actually owns this identity:
+      // Require a signed message containing the identity
+      socket.identity = identity;
+      identities[identity] = socket.id;
 
-    socket.identity = identity;
-    identities[identity] = socket.id;
+      socket.emit('registered');
 
-    socket.emit('registered');
+      emit('register', identity);
 
-    emit('register', identity);
-
-    log('registered', identity);
+      log('registered', identity);
+    }
+    catch (e) {
+      console.log(e.stack);
+      return e;
+    }
   }
 };
 
