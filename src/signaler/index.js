@@ -3,7 +3,7 @@ import emitter from 'es-emitter';
 
 import routes from './routes';
 
-module.exports = app => {
+module.exports = (app, log) => {
   const {emit, on, off} = emitter()();
 
   console.log(emit, on, off);
@@ -15,6 +15,14 @@ module.exports = app => {
   const signal = app.io.of('/signal');
 
   signal.use(handleSocket);
+
+  inject([registration, signaler, rooms, status]);
+
+  function inject(plugins) {
+    _.each(plugins, plugin => {
+      _.each(plugin.routes, (handler, name) => app.io.route(name, handler));
+    });
+  }
 
   _.each(routes(log, sockets, identities, stats), (handler, name) => app.io.route(name, handler));
 
@@ -77,7 +85,3 @@ module.exports = app => {
     }
   }
 };
-
-function log(...args) {
-  console.log(...args);
-}

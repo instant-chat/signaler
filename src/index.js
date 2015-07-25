@@ -1,4 +1,5 @@
 import fs from 'fs';
+import http from 'http';
 import https from 'https';
 
 import koa from 'koa.io';
@@ -12,42 +13,58 @@ import signaler from './signaler';
 import rooms from './rooms';
 import stats from './stats';
 
+import allInOneServer from './allInOneServer';
+
+import {injector, makeRepository} from './injector';
+
+console.log(injector, allInOneServer);
+
 require('./traceur-runtime');
 
-(function (options) {
-  const app = koa();
 
-  app.io.set('origins', '*:*');
+(function (options) {
+  const {ca, cert, key, port} = options,
+        app = koa();
+
+  // app.io.set('origins', '*:*');
 
   onerror(app);
 
   app.use(logger());
   app.use(gzip());
 
-  const signal = signaler(app);
+  const allInOne = instantiate(allInOneServer);
 
-  stats(app, signal.stats);
-  rooms(app, signal.sockets, signal.identities, signal.events);
+  function instantiate(obj) {
+    const {dependencies, definitions} = obj;
 
-  const httpsServer = createServer(options, app);
-
-  function createServer(options, app) {
-    const {ca, key, cert, port} = options;
-
-    const httpsServer = https.createServer({ca, key, cert}, app.callback());
-
-    app.io.attach(httpsServer);
-
-    httpsServer.listen(port);
-
-    console.log(`Listening on port ${port}`);
-
-    return httpsServer;
+    return injector(makeRepository(dependencies))(definitions.server)(app);
   }
+
+  function inject(plugins) {
+    const {io} = app;
+    _.each(plugins, plugin => {
+      const {routes} = plugin(io, plugins);
+      _.each(routes, (handler, name) => io.route(name, handler));
+    });
+  }
+
+  // const signal = signaler(app, log);
+
+  // stats(app, log, signal.stats);
+  // rooms(app, log, signal.sockets, signal.identities, signal.events);
+
+  statEmitter(log, signal);
+
+  const server = http.createServer(app.callback());
+  app.io.attach(server);
+  server.listen(port);
+  console.log(`Listening on port ${port}`);
+  return server;
 })({
   ca: [],
   key: (function() {
-          const key = process.env.key || `${process.env.PWD}/../debug/debug-localhost.key`;
+          const key = process.env.key || `${process.env.PWD}/../debug/secrets/debug-localhost/key`;
 
           try {
             return fs.readFileSync(key);
@@ -86,7 +103,7 @@ require('./traceur-runtime');
         })(),
 
   cert: (function() {
-          const key = process.env.cert || `${process.env.PWD}/../debug/debug-localhost.cert`;
+          const key = process.env.cert || `${process.env.PWD}/../debug/secrets/debug-localhost/cert`;
 
           try {
             return fs.readFileSync(key);
@@ -116,3 +133,27 @@ require('./traceur-runtime');
 
   port: process.env.port || 2999
 });
+
+function statEmitter(log, signal, interval = 2000) {
+  setInterval(emitStats, interval);
+  setImmediate(emitStats);
+
+  const {stats} = signal;
+
+  let lastEmit = new Date().getTime();
+
+  function emitStats() {
+    let now = new Date().getTime(),
+        dt = now - lastEmit,
+        drift = dt - interval;
+
+    lastEmit = now;
+
+    log({stats, dt, drift});
+  }
+}
+
+
+function log(...args) {
+  console.log(...args);
+}

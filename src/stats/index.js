@@ -1,5 +1,5 @@
 import routes from './routes';
 
-module.exports = (app, signalStats) => {
-  routes(app, signalStats);
+module.exports = (app, log, signalStats) => {
+  routes(app, log, signalStats);
 };

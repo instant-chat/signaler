@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import routes from './routes';
 
-module.exports = (app, sockets, identities, signalEvents) => {
+module.exports = (app, log, sockets, identities, signalEvents) => {
   const r = routes(log, sockets, identities, signalEvents);
   _.each(r, (handler, name) => app.io.route(name, handler));
 
@@ -10,7 +10,3 @@ module.exports = (app, sockets, identities, signalEvents) => {
 
   return {};
 };
-
-function log(...args) {
-  // console.log(...args);
-}

@@ -1,43 +1,46 @@
-module.exports = (log, sockets, identities) => {
-  return {
-    'peer offer': buildForwardFn('offer'),
-    'peer answer': buildForwardFn('answer'),
-    'peer candidates': buildForwardFn('candidates')
-  };
+module.exports = log => {
+  return (sockets, identities) => {
+    return {
+      'peer offer': buildForwardFn('offer'),
+      'peer answer': buildForwardFn('answer'),
+      'peer candidates': buildForwardFn('candidates')
+    };
 
-  function buildForwardFn(fnName) {
-    const messageName = `peer ${fnName}`;
+    function buildForwardFn(fnName) {
+      const messageName = `peer ${fnName}`;
 
-    return function* (next, data) {
-      try {
-        const {socket} = this;
+      return function* (next, data) {
+        try {
+          console.log(this);
+          const {socket} = this;
 
-        const {to} = data,
-              identity = identities[to];
+          const {to} = data,
+                identity = identities[to];
 
-        log(messageName, 'to', to);
+          log(messageName, 'to', to);
 
-        if (identity) {
-          const {socket: remoteSocket} = sockets[identity];
+          if (identity) {
+            const remoteSocket = sockets[identity];
 
-          if (socket) {
-            const forwardMessage = {from: socket.identity};
-            forwardMessage[fnName] = data[fnName];
-            remoteSocket.emit(messageName, forwardMessage);
+            if (remoteSocket) {
+              const forwardMessage = {from: socket.identity};
+              forwardMessage[fnName] = data[fnName];
+              remoteSocket.emit(messageName, forwardMessage);
+            }
+            else {
+              socket.emit('error ' + messageName, {error: `Could not find ${to}`});
+            }
           }
           else {
+            // need to check remote signalers
             socket.emit('error ' + messageName, {error: `Could not find ${to}`});
           }
         }
-        else {
-          // need to check remote signalers
-          socket.emit('error ' + messageName, {error: `Could not find ${to}`});
+        catch (e) {
+          console.log(e.stack);
+          return e;
         }
-      }
-      catch (e) {
-        console.log(e.stack);
-        return e;
-      }
-    };
-  }
+      };
+    }
+  };
 };

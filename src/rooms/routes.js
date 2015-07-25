@@ -43,7 +43,7 @@ module.exports = (log, sockets, identities, signalEvents) => {
         log('room', {name, participants});
         log(identity, 'is in rooms', inRooms);
         log('notifying', toNotify);
-        _.each(toNotify, receiverIdentity => {
+        _.each(participants, (x, receiverIdentity) => {
           const receiverSocketId = identities[receiverIdentity],
                 receiverSocket = sockets[receiverSocketId];
 
