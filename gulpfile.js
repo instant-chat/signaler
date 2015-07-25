@@ -74,7 +74,7 @@ gulp.task('start_dev', ['runtime', 'terminate'],
 
     process.on('exit', (code, signal) => {
       devChild.process = undefined;
-      devChild.terminateFn();
+      if (devChild.terminateFn) devChild.terminateFn();
     });
 
     devChild.emitter = new events.EventEmitter();

@@ -26,7 +26,7 @@
     "gulp-util": "^3.0.4",
     "jshint-stylish": "^1.0.1",
     "minimist": "^1.1.1",
-    "traceur": "0.0.88",
+    "traceur": "0.0.89",
     "traceur-runtime": "0.0.59",
     "vinyl-source-stream": "^1.1.0"
   },
