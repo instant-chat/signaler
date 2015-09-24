@@ -1,7 +1,9 @@
 import _ from 'lodash';
 
 export function injector(repository) {
-  return inject;
+  const {augment} = repository;
+
+  return _.extend(inject, {augment});
 
   function inject(definition) {
     console.log({definition});
@@ -11,45 +13,53 @@ export function injector(repository) {
           dependencies = [],
           cache = {};
 
-    console.log('target', target);
-
-    for (var i = 0; i < length - 1; i++) handle(definition[i]);
+    for (var i = 0; i < length - 1; i++) {
+      const value = definition[i];
+      if (typeof value === 'string') dependencies.push(getDependency(value));
+      else throw new Error('Expected String!');
+    }
 
     return target(...dependencies);
 
-    function handle(value) {
-      if (typeof value === 'string') {
-        dependencies.push(getDependency(value));
-        // dependencies[value] = getDependency(value);
-      }
-      else throw new Error('Exepcted String!');
-    }
-
     function getDependency(name) {
+      console.log('getDependency', name);
       const cached = cache[name] = cache[name] || create(name);
 
       return cached;
     }
 
     function create(name) {
-      console.log(repository);
+      console.log('create', name);
       return inject(repository(name));
-      // return repository(name)(definition);
-      // return repository(name)(definition);
     }
   }
 }
 
 export function makeRepository(contents) {
-  const repository = {};
+  const repository = {},
+        externalRepositories = [];
 
   _.each(contents, content => _.extend(repository, content));
 
-  return name => {
+  return _.extend(lookup, {augment});
+
+  function lookup(name) {
     const fn = repository[name];
-    console.log('fn', fn);
+
+console.log('lookup', name, fn);
+
     if (fn) return fn;
-    throw new Error(`Could not find '${name}'`);
+
+console.log({externalRepositories});
+    const dependency = _.reduce(externalRepositories, (instance, repository) => instance ? instance : repository(name), undefined);
+
+    if (dependency) return dependency;
+
+    throw new Error(`Could not find '${name} in ${JSON.stringify(repository)}'`);
     // return repository[name];
-  };
+  }
+
+  function augment(externalRepository) {
+    externalRepositories.unshift(externalRepository);
+  }
 }

@@ -33,10 +33,16 @@ require('./traceur-runtime');
   app.use(logger());
   app.use(gzip());
 
-  const allInOne = instantiate(allInOneServer);
+  // const allInOne = instantiate(allInOneServer);
+  const allInOne = allInOneServer.allInOneServer(makeRepository({log: {log:[() => console.log]}}));
+  allInOne(app.io.of('signal'));
+
+  console.log({allInOne});
 
   function instantiate(obj) {
     const {dependencies, definitions} = obj;
+
+    console.log({obj, definitions});
 
     return injector(makeRepository(dependencies))(definitions.server)(app);
   }
@@ -54,7 +60,7 @@ require('./traceur-runtime');
   // stats(app, log, signal.stats);
   // rooms(app, log, signal.sockets, signal.identities, signal.events);
 
-  statEmitter(log, signal);
+  // statEmitter(log, signal);
 
   const server = http.createServer(app.callback());
   app.io.attach(server);
@@ -65,7 +71,6 @@ require('./traceur-runtime');
   ca: [],
   key: (function() {
           const key = process.env.key || `${process.env.PWD}/../debug/secrets/debug-localhost/key`;
-
           try {
             return fs.readFileSync(key);
           }

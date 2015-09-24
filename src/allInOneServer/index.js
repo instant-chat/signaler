@@ -1,31 +1,34 @@
 import _ from 'lodash';
 
+import {injector, makeRepository} from '../injector';
+
+
+import registration from './registration';
+import rooms from './rooms';
 import server from './server';
+import signaler from './signaler';
+import status from './status';
 
-import {injector} from '../injector';
-
-module.exports = ['registration', 'signaler', 'rooms', 'status', server];
-
-module.exports = {
-  dependencies: ['registration', 'signaler', 'rooms', 'status'],
-  definitions: {
-    server: server.server
-  }
-};
+// these are *just* data stores
+import identities from './identities';
+import sockets from './sockets';
 
 module.exports = {
-  'allInOneServer': define(['registration', 'signaler', 'rooms', 'status'])
-                      (server)
+  'allInOneServer': define({
+    registration, signaler, rooms, status, sockets, identities
+  })(server.server)
 };
 
 function define(dependencies) {
   return obj => {
-    const inject = injector(dependencies);
+    console.log({obj});
+    const repository = makeRepository(dependencies);
+    const inject = injector(repository);
+    return externalDependencies => {
+      console.log({externalDependencies, repository, obj});
+      repository.augment(externalDependencies);
 
-    return _.memoize(name => () => inject(obj));
+      return inject(obj);
+    };
   };
-}
-
-function memoize(fn) {
-
 }

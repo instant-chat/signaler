@@ -1,46 +1,51 @@
 module.exports = log => {
   return (sockets, identities) => {
+    const peer = namespace('peer');
     return {
-      'peer offer': buildForwardFn('offer'),
-      'peer answer': buildForwardFn('answer'),
-      'peer candidates': buildForwardFn('candidates')
+      'peer offer': peer.forward('offer'),
+      'peer answer': peer.forward('answer'),
+      'peer candidates': peer.forward('candidates')
     };
 
-    function buildForwardFn(fnName) {
-      const messageName = `peer ${fnName}`;
+    function namespace(name) {
+      return {forward};
 
-      return function* (next, data) {
-        try {
-          console.log(this);
-          const {socket} = this;
+      function forward(fnName) {
+        const messageName = `${name} ${fnName}`;
 
-          const {to} = data,
-                identity = identities[to];
+        return function* (next, data) {
+          try {
+            console.log(this);
+            const {socket} = this;
 
-          log(messageName, 'to', to);
+            const {to} = data,
+                  identity = identities[to];
 
-          if (identity) {
-            const remoteSocket = sockets[identity];
+            log(messageName, 'to', to);
 
-            if (remoteSocket) {
-              const forwardMessage = {from: socket.identity};
-              forwardMessage[fnName] = data[fnName];
-              remoteSocket.emit(messageName, forwardMessage);
+            if (identity) {
+              const remoteSocket = sockets[identity];
+
+              if (remoteSocket) {
+                const forwardMessage = {from: socket.identity};
+                forwardMessage[fnName] = data[fnName];
+                remoteSocket.emit(messageName, forwardMessage);
+              }
+              else {
+                socket.emit('error ' + messageName, {error: `Could not find ${to}`});
+              }
             }
             else {
+              // need to check remote signalers
               socket.emit('error ' + messageName, {error: `Could not find ${to}`});
             }
           }
-          else {
-            // need to check remote signalers
-            socket.emit('error ' + messageName, {error: `Could not find ${to}`});
+          catch (e) {
+            console.log(e.stack);
+            return e;
           }
-        }
-        catch (e) {
-          console.log(e.stack);
-          return e;
-        }
-      };
+        };
+      }
     }
   };
 };
